@@ -1,0 +1,16 @@
+{
+  do
+  { 
+    if (k<0)
+      switch i of
+	case 0:   
+              c++
+           break;
+        case 1:
+            for()
+		for()
+		  for() a--
+            break;
+	default: print;
+  }while(i<0);
+}
