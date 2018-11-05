@@ -1,16 +1,40 @@
+function Deal(const deck[], n)
 {
-  do
-  { 
-    if (k<0)
-      switch i of
-	case 0:   
-              c++
-           break;
-        case 1:
-            for()
-		for()
-		  for() a--
-            break;
-	default: print;
-  }while(i<0);
+	win, curr;	
+	eval("Стол\n");
+	for(i = 0; i < 5; i++)
+	{
+		alert();
+			for(j = 0; j < n; j++)
+				gamers[j][i] = deck[currentCard];
+		currentCard++;
+	}
+	alert("hh");
+	for(i = 0; i < n; i++)
+	{
+		for(j = 5; j < 7; j++)
+		{
+			eval();
+			gamers[i][j];
+			c+;
+		}
+		switch (curr)
+                {
+		  case 0: alert("Ничего");
+  			  break;
+		  case 1: alert("Пара");
+			  break;
+		  case 2: alert("Две Пары");
+			  break;
+		
+                  default: seek();
+                }		
+		alert("Hello");
+		if(curr > max)
+		{
+			max = curr;
+			win = i;
+		}
+	}
+	alert("Победил игрок %d", win + 1);
 }

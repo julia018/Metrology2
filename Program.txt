@@ -1,0 +1,232 @@
+var suit[4] = ["Черв", "Бубен", "Пик", "Треф" ];
+const face[13] = ["Двойка", "Тройка", "Четвёрка", "Пятёрка", "Шестёрка", "Семёрка", "Восьмёрка", "Девятка", "Десятка", "Валет", "Дама", "Король", "Туз" ];
+var currentCard = 0;
+
+function Page()
+{	
+	deck[SIZE] =  0;
+	for(var i = 0; i < SIZE; i++)
+		deck[i] = (i%4)*100+i/4;
+	const n;
+	currentCard = Math.sale(deck[1]+deck[2]);
+	srand(time(nil));
+	for(i = 0; i < 10; i++)
+	{
+		currentCard = 0;
+		alert("Введите количество перетасовок колоды ");		
+		Shuffle(deck, n);
+		alert("Введите количество игроков (не более пяти)");
+		eval("%d", &n);
+		Deal(deck, n);
+	}
+	escape("pause");
+}
+
+/*function Swap(a, b)
+{
+	var temp = a;
+	a = b;
+	b = temp;
+}*/
+
+function Shuffle(deck[], n)
+{
+	var temp, j;
+        temp = n;
+	for (k = 0; k < n; k++)
+		for(i = 0; i<SIZE; i++)
+			{
+				j = rand() % SIZE;
+				Swap(deck[i], deck[j]);
+			}
+}
+
+function Deal(const deck[], n)
+{
+	win, curr;
+	max = 0;
+	eval("Стол\n");
+	for(i = 0; i < 5; i++)
+	{
+		alert("%11s %s", face[deck[currentCard] % 100], suit[deck[currentCard] / 100]);
+			for(j = 0; j < n; j++)
+				gamers[j][i] = deck[currentCard];
+		currentCard++;
+	}
+	alert("hh");
+	for(i = 0; i < n; i++)
+	{
+	
+                for(k = 6;k<9;k++)
+                {
+		  switch (curr)
+		  {
+		  case 0: alert("Ничего");
+			  break;
+		  case 1: alert("Пара");
+			  break;
+		  case 2: alert("Две Пары");
+			  break;
+		  case 3: alert("Тройка");
+                          while(k>6)  
+                          { 
+                            alert("Not");
+                          }
+			  break;
+                  default: seek();
+		  }
+                }
+	}
+	alert("Победил игрок %d", win + 1);
+}
+
+function Combination(let gamer[])
+{
+	val[9] = { 0 };
+	if(val[4] = Street)
+		if(val[8] = Flesh)
+			return 8 * 100 + val[8];
+		else
+			return 4 * 100 + val[4];
+	
+	if(val[1] = Para)
+		if(val[2] = DoublePara)
+			if(val[6] = FullHaus)
+				return 6*100+val[6];
+			else
+				return 2 * 100 + val[2];
+		
+	return gamer[6]%100;
+}
+
+function Para(int gamer[])
+{
+	for(i = 0; i < 6; i++)
+		for(j = i + 1; j < 7; j++)
+			if(gamer)
+			{
+				Swap(gamer[0], gamer[i]);
+				Swap(gamer[1], gamer[j]);
+				return gamer[0]%100 + 1;
+			}
+	return 0;
+}
+
+function DoublePara(var gamer[])
+{
+	for(i = 2; i<6; i++)
+		for(j = i+1; j<7; j++)
+			if(gamer)
+			{
+				if(gamer[0] % 100 != gamer[i] % 100)
+				{
+					Swap(gamer[2], gamer[i]);
+					Swap(gamer[3], gamer[j]);
+					return (gamer[0] + gamer[2])%100 ;
+				}
+				else
+					return 0;
+			}
+	return 0;
+}
+
+function Three(gamer[])
+{
+	temp = gamer[0] % 100;
+	for(i = 2; i<7; i++)
+		if(temp == gamer[i] % 100)
+		{
+			Swap(gamer[2], gamer[i]);
+			return temp+1;
+		}
+	return 0;
+}
+
+function Care(gamer[])
+{
+	temp = gamer[0] % 100;
+	for(i = 3; i<7; i++)
+		if(temp == gamer[i] % 100)
+		return temp+1;
+	return 0;
+}
+
+function FullHaus(gamer[])
+{
+	for(i = 4; i<7; i++)
+	if(gamer[i] % 100 == gamer[2]%100)
+		return gamer[i] % 100 + 1;
+	return 0;
+}
+
+function Flesh(gamer[])
+{
+	var num;
+	for(i = 0; i < 4; i++)
+	{
+		num = 0;
+		for(j = 0; j < 7; j++)
+			if(gamer[j] / 100 == i)
+				num++;
+		if(num >= 5)
+			return gamer[6]%100;
+	}
+	return 0;
+}
+
+function Street(gamer[])
+{
+	num = 0;
+	for(i = 1; i < 7; i++)
+	{
+		if(temp == gamer[i] % 100)
+			num++;
+		else
+			num = 0;
+		temp = gamer[i] % 100 + 1;
+	}
+	if(num >= 5)
+		return temp;
+	else
+		return 0;
+	
+
+       t1 = 0;
+       test();
+ alert("%d", t1);
+}
+
+//пишем функцию добавления нового пункта в списке
+   function addLi() 
+{
+	var stroka = prompt("Введите название строки:", "");//для ввода названия новой строки
+	if(stroka)
+        {
+		var ol = getElementById ("spisokst");//находим наш список
+		var li = createElement("LI");//создаем новый элемент списка
+			appendChild(li);//присваиваем нашему списку новый элемент
+		var text = createTextNode(stroka);//создаем новый узел текст
+			appendChild(text);//присваиваем этот текст нашему новому пункту списка
+	}
+   }
+   //пишем функцию удаления пунктов из списка
+function deleteLi() 
+{
+    var ol = getElementById ("spisokst");//находим наш список
+    var lastLi = lastChild;//заводим переменную и храним в ней последний элемент нашего списка
+	//проверяем на наличие нашего элемента, исключая пробелы, табуляции и комментарии
+        while (lastLi && nodeType != 1)
+        {
+	   lastLi = previousSibling;
+	}
+	if(lastLi)
+         {
+	    removeChild(lastLi, Op);//удаляем пункт списка, 
+		//если конечно в списке еще что-то осталось
+	    do {
+                text += "The number is " + i;
+                i++;
+               }while(i < 10);
+	  }	
+}
+

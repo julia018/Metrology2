@@ -4,17 +4,21 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs,StrUtils;
+  Dialogs,StrUtils,
+  StdCtrls;
 
 type
   TForm1 = class(TForm)
+    lbl1: TLabel;
+    lbl2: TLabel;
+    lbl3: TLabel;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
     function ReadUntil(ch:Char):Integer;
     function Analysis(ch:Char):Integer;
-    procedure Skip;
+    procedure Skip(var ch:char);
   end;
 
 const
@@ -22,16 +26,36 @@ const
 
 var
   ProgramFile:TextFile;
-  AllOperators:Integer;
+  AllOperators, CondOperators:Integer;
   Ml:Integer;
   Alph: set of char = ['A'..'Z','a'..'z','0'..'9','$','_','{'];
-  CaseCh: char;
+  FlPrevCase:boolean;
 var
   Form1: TForm1;
 
 implementation
 
 {$R *.dfm}
+procedure TForm1.Skip(var ch:char);
+
+begin
+  read(ProgramFile,ch);
+  if ch='/' then
+     while ch<>#13 do
+      read(ProgramFile,ch)
+  else
+  begin
+    if ch ='*'  then
+    begin
+      read(ProgramFile,ch);
+      while (ch<>'*') do
+      begin
+        read(ProgramFile,ch);
+      end;
+    end;
+  end
+end;
+
 function TForm1.ReadUntil(ch:Char):Integer;
 var
   currStr:string;
@@ -51,25 +75,12 @@ begin
    FlCase:=False;
    while( buf<>';') and  (not FlRec) and (buf<>#13)  do
    begin
-      if (CaseCh<>#0) then
-      begin
-        buf:=casech;
-        CaseCh:=#0;
-        FlCase:=False;
-      end;
      case buf of
       'A'..'Z','a'..'z','0'..'9':begin
                                    currStr:=currStr+buf;
-                                   if Flcase and not((buf ='d') or (buf = 'c') ) and (length(currStr)=1) then
-                                   begin
-                                     FlRec:=true;
-                                     FlCase := False;
-                                     CaseCh := Buf;
-                                   end
-                                   else
-                                   begin
-                                     case AnsiIndexStr(currStr,ArrIf) of
+                                   case AnsiIndexStr(currStr,ArrIf) of
                                       0:begin                              //if
+                                          CondOperators:=CondOperators+1;
                                           AllOperators:=AllOperators+1;
                                           FlRec:=True;
                                           while(buf <> ')') do
@@ -84,7 +95,7 @@ begin
                                           begin
                                             read(ProgramFile,buf);
                                             if buf='/' then
-                                             Skip;
+                                             Skip(buf);
                                           end;
                                           if buf='{' then
                                             BufLevel:=Analysis(buf)
@@ -95,6 +106,7 @@ begin
                                         end;
                                       1:begin                              //do
                                           FlRec:=True;
+                                          CondOperators:=CondOperators+1;
                                           AllOperators:=AllOperators+1;
                                           FlDo:=True;
                                           read(ProgramFile,buf);
@@ -107,7 +119,7 @@ begin
                                           begin
                                             read(ProgramFile,buf);
                                             if buf='/' then
-                                             Skip;
+                                             Skip(buf);
                                           end;
                                           if buf='{' then
                                             BufLevel:=Analysis(buf)
@@ -132,8 +144,9 @@ begin
                                             begin
                                                read(ProgramFile,buf);
                                               if buf='/' then
-                                                Skip;
+                                                Skip(buf);
                                             end;
+                                            CondOperators:=CondOperators+1;
                                             AllOperators:=AllOperators+1;
                                             if buf='{' then
                                               BufLevel:=Analysis(buf)
@@ -144,30 +157,36 @@ begin
                                           end;
                                         end;
                                       3:begin                              //case
-                                          numbcase:=numbcase+1;
-                                          FlCase:= True;
-                                          AllOperators:=AllOperators+1;
-                                          while(buf <> ':') do
-                                          read(ProgramFile,buf);
-                                          read(ProgramFile,buf);
-                                          if buf = #13 then
+                                          if not FlPrevCase then
                                           begin
+                                            CondOperators:=CondOperators+1;
+                                            FlPrevCase:=True;
+                                            numbcase:=numbcase+1;
+                                            FlCase:= True;
+                                            AllOperators:=AllOperators+1;
+                                            while(buf <> ':') do
                                             read(ProgramFile,buf);
                                             read(ProgramFile,buf);
+                                            if buf = #13 then
+                                            begin
+                                              read(ProgramFile,buf);
+                                              read(ProgramFile,buf);
+                                            end;
+                                            while not (buf in Alph) do
+                                            begin
+                                              read(ProgramFile,buf);
+                                              if buf='/' then
+                                               Skip(buf);
+                                            end;
+                                            BufLevel:=Analysis(buf);
+                                            Level:= BufLevel + numbcase;
+                                            currStr:='';
                                           end;
-                                          while not (buf in Alph) do
-                                          begin
-                                            read(ProgramFile,buf);
-                                            if buf='/' then
-                                             Skip;
-                                          end;
-                                          BufLevel:=Analysis(buf);
-                                          Level:= BufLevel + numbcase;
-                                          currStr:='';
                                         end;
                                       4:begin                              //for
                                           AllOperators:=AllOperators+3;
                                           FlRec:=True;
+                                          CondOperators:=CondOperators+1;
                                           while(buf <> ')') do
                                            read(ProgramFile,buf);
                                           read(ProgramFile,buf);
@@ -180,7 +199,7 @@ begin
                                           begin
                                             read(ProgramFile,buf);
                                             if buf='/' then
-                                             Skip;
+                                             Skip(buf);
                                           end;
                                           if buf='{' then
                                             BufLevel:=Analysis(buf)
@@ -201,26 +220,42 @@ begin
                                           begin
                                             read(ProgramFile,buf);
                                             if buf='/' then
-                                             Skip;
+                                             Skip(buf);
                                           end;
                                           if buf='{' then
                                             BufLevel:=Analysis(buf)
                                           else
                                             BufLevel:=ReadUntil(buf);
-                                          Level:=BufLevel;
+                                          Level:=1+BufLevel;
                                           currStr:='';
                                         end;
-                                      6:begin                              //switch
-                                           while buf<>#10 do
-                                            read(ProgramFile,buf);
-                                           read(ProgramFile,buf);
-                                           currStr:='';
-                                           numbcase:=0
-                                        end;
-                                       7:begin                              //break
 
-                                         end;
-                                       8:begin                              //default
+                                      6:begin                             //switch
+                                          FlRec:=True;
+                                          read(ProgramFile,buf);
+                                          while(buf <> ')') do
+                                           read(ProgramFile,buf);
+                                            if buf = #13 then
+                                          begin
+                                            read(ProgramFile,buf);
+                                            read(ProgramFile,buf);
+                                          end;
+                                          while not (buf in Alph) do
+                                          begin
+                                            read(ProgramFile,buf);
+                                            if buf='/' then
+                                             Skip(buf);
+                                          end;
+                                          if buf='{' then
+                                            BufLevel:=Analysis(buf)
+                                          else
+                                            BufLevel:=ReadUntil(buf);
+                                           currStr:='';
+                                        end;
+                                      7:begin                              //break
+
+                                        end;
+                                      8:begin                             //default
                                            FlRec:=True;
                                            read(ProgramFile,buf);
                                            if buf = #13 then
@@ -232,7 +267,7 @@ begin
                                            begin
                                              read(ProgramFile,buf);
                                              if buf='/' then
-                                              Skip;
+                                              Skip(buf);
                                            end;
                                            if buf='{' then
                                              BufLevel:=Analysis(buf)
@@ -240,13 +275,13 @@ begin
                                              BufLevel:=ReadUntil(buf);
                                            Level:=BufLevel;
                                            currStr:='';
-                                         end;
-                                     end;
-                                     read(ProgramFile,buf);
+                                        end;
+
                                    end;
+                                   read(ProgramFile,buf);
                                  end;
       '/':begin
-           Skip;
+           Skip(buf);
           end;
      else
        begin
@@ -257,7 +292,10 @@ begin
       MaxLevel:=Level;
 
    end;
+
+   if not FlRec then
    AllOperators:=AllOperators+1;
+
    Result:=MaxLevel;
 end;
 
@@ -267,7 +305,6 @@ var
   buf:Char;
   currStr:string;
   FlDo, FlBreak:Boolean;
-  FlCase:boolean;
   Level, MaxLevel, BufLevel, numbcase:Integer;
 begin
   FlDo:=False;
@@ -276,29 +313,16 @@ begin
   buf:=ch;
   FlBreak:=False;
   currStr:='';
-  FlCase:=False;
-  while( buf<>'}') and (not FlBreak) do
+  numbcase:=0;
+  while( buf<>'}') and (not FlBreak) and (not eof(ProgramFile)) do
   begin
-    if (CaseCh<>#0) then
-    begin
-      buf:=casech;
-      CaseCh:=#0;
-      FlCase:=False;
-    end;
     case buf of
      'A'..'Z','a'..'z','0'..'9': begin
                                    currStr:=currStr+buf;
-                                   if Flcase and not((buf ='d') or (buf = 'c') ) and (length(currStr)=1) then
-                                   begin
-                                     FlCase := False;
-                                     CaseCh := Buf;
-                                     FlBreak:=true;
-                                   end
-                                   else
-                                   begin
-                                     case AnsiIndexStr(currStr,ArrIf) of
+                                  case AnsiIndexStr(currStr,ArrIf) of
                                       0:begin                              //if
                                           AllOperators:=AllOperators+1;
+                                          CondOperators:=CondOperators+1;
                                           while(buf <> ')') do
                                            read(ProgramFile,buf);
                                           read(ProgramFile,buf);
@@ -311,7 +335,7 @@ begin
                                           begin
                                             read(ProgramFile,buf);
                                             if buf='/' then
-                                             Skip;
+                                             Skip(buf);
                                           end;
                                           if buf='{' then
                                             BufLevel:=Analysis(buf)
@@ -321,7 +345,7 @@ begin
                                           currStr:='';
                                         end;
                                       1:begin                              //do
-                                          AllOperators:=AllOperators+1;
+                                          CondOperators:=CondOperators+1;
                                           FlDo:=True;
                                           read(ProgramFile,buf);
                                           if buf = #13 then
@@ -333,7 +357,7 @@ begin
                                           begin
                                             read(ProgramFile,buf);
                                             if buf='/' then
-                                             Skip;
+                                             Skip(buf);
                                           end;
                                           if buf='{' then
                                             BufLevel:=Analysis(buf)
@@ -357,9 +381,10 @@ begin
                                             begin
                                               read(ProgramFile,buf);
                                               if buf='/' then
-                                                Skip;
+                                                Skip(buf);
                                             end;
                                             AllOperators:=AllOperators+1;
+                                            CondOperators:=CondOperators+1;
                                             if buf='{' then
                                               BufLevel:=Analysis(buf)
                                             else
@@ -368,30 +393,35 @@ begin
                                           end;
                                           currStr:='';
                                         end;
-                                      3:begin                              //case
-                                          FlCase:=True;
-                                          numbcase:=numbcase+1;
-                                          AllOperators:=AllOperators+1;
-                                          while(buf <> ':') do
-                                           read(ProgramFile,buf);
-                                          read(ProgramFile,buf);
-                                          if buf = #13 then
+                                      3:begin                         //case
+                                          if not FlPrevCase then
                                           begin
+                                            CondOperators:=CondOperators+1;
+                                            FlPrevCase:=True;
+                                            numbcase:=numbcase+1;
+                                            AllOperators:=AllOperators+1;
+                                            while(buf <> ':') do
+                                             read(ProgramFile,buf);
                                             read(ProgramFile,buf);
-                                            read(ProgramFile,buf);
+                                            if buf = #13 then
+                                            begin
+                                              read(ProgramFile,buf);
+                                              read(ProgramFile,buf);
+                                            end;
+                                            while not (buf in Alph) do
+                                            begin
+                                              read(ProgramFile,buf);
+                                              if buf='/' then
+                                               Skip(buf);
+                                            end;
+                                            BufLevel:=Analysis(buf);
+                                            Level:=numbcase + BufLevel;
+                                            currStr:='';
                                           end;
-                                          while not (buf in Alph) do
-                                          begin
-                                            read(ProgramFile,buf);
-                                            if buf='/' then
-                                             Skip;
-                                          end;
-                                          BufLevel:=Analysis(buf);
-                                          Level:=numbcase + BufLevel;
-                                          currStr:='';
                                         end;
                                       4:begin                              //for
                                           AllOperators:=AllOperators+3;
+                                          CondOperators:=CondOperators+1;
                                           while(buf <> ')') do
                                            read(ProgramFile,buf);
                                           read(ProgramFile,buf);
@@ -404,7 +434,7 @@ begin
                                           begin
                                             read(ProgramFile,buf);
                                             if buf='/' then
-                                             Skip;
+                                             Skip(buf);
                                           end;
                                           if buf='{' then
                                             BufLevel:=Analysis(buf)
@@ -424,25 +454,43 @@ begin
                                           begin
                                             read(ProgramFile,buf);
                                             if buf='/' then
-                                             Skip;
+                                             Skip(buf);
                                           end;
                                           if buf='{' then
                                             BufLevel:=Analysis(buf)
                                           else
                                             BufLevel:=ReadUntil(buf);
-                                          Level:= BufLevel;
+                                          Level:=1 + BufLevel;
                                           currStr:='';
                                         end;
                                       6:begin                              //switch
-                                          while buf<>#10 do
-                                           read(ProgramFile,buf);
+
                                           read(ProgramFile,buf);
+                                          while(buf <> ')') do
+                                           read(ProgramFile,buf);
+                                            if buf = #13 then
+                                          begin
+                                            read(ProgramFile,buf);
+                                            read(ProgramFile,buf);
+                                          end;
+                                          while not (buf in Alph) do
+                                          begin
+                                            read(ProgramFile,buf);
+                                            if buf='/' then
+                                             Skip(buf);
+                                          end;
+                                          if buf='{' then
+                                            BufLevel:=Analysis(buf)
+                                          else
+                                          BufLevel:=ReadUntil(buf);
+                                          level:=BufLevel;
                                           currStr:='';
-                                          numbcase:=0;
                                         end;
                                       7:begin                              //break
                                           FlBreak := True;
                                           read(ProgramFile,buf);
+                                          FlPrevCase:=False;
+                                          AllOperators:=AllOperators+1;
                                         end;
                                       8:begin                              //default
                                           read(ProgramFile,buf);
@@ -455,7 +503,7 @@ begin
                                           begin
                                             read(ProgramFile,buf);
                                             if buf='/' then
-                                             Skip;
+                                             Skip(buf);
                                           end;
                                           if buf='{' then
                                             BufLevel:=Analysis(buf)
@@ -464,27 +512,23 @@ begin
                                           Level:=BufLevel;
                                           currStr:='';
                                         end;
-                                    end;
-                                    if CaseCh=#0 then
-                                     read(ProgramFile,buf);
-                                   end;
+                                  end;
+                                  read(ProgramFile,buf);
                                  end;
      ';': begin
-            if FlDo=False then
-              AllOperators:=AllOperators+1
-            else
-              FlDo:=False;
+            AllOperators:=AllOperators+1;
+            FlDo:=False;
             currStr:='';
             read(ProgramFile,buf);
-            if buf ='#10' then
+            {if buf ='#10' then
             begin
               read(ProgramFile,buf);
               read(ProgramFile,buf);
-            end;
+            end;}
           end;
-     '/':begin
-           Skip;
-         end;
+      '/':begin
+           Skip(buf);
+          end;
       #13:begin
             read(ProgramFile,buf);
             read(ProgramFile,buf);
@@ -494,6 +538,7 @@ begin
 
     else
       begin
+
         currStr:='';
         read(ProgramFile,buf);
       end;
@@ -506,34 +551,27 @@ end;
 
 
 procedure TForm1.FormCreate(Sender: TObject);
+var
+  MaxL:integer;
 begin
-  CaseCh:=#0;
   AllOperators:=0;
-  AssignFile(ProgramFile,'file.txt');
+  FlPrevCase:=False;
+  CondOperators:=0;
+  AssignFile(ProgramFile,'Program.txt');
   Reset(ProgramFile);
-  Ml:=Analysis(#0);
+  MaxL:=0;
+  while not eof(ProgramFile) do
+  begin
+    Ml:=Analysis(#0);
+    if maxl<Ml then MaxL:=Ml;
+  end;
+  lbl1.Caption:=inttostr(maxl);
+  lbl2.Caption:=inttostr(AllOperators);
+  lbl3.Caption:=inttostr(CondOperators);
   CloseFile(ProgramFile);
+  
 end;
 
-procedure TForm1.Skip;
-var
- buf:Char;
-begin
-  read(ProgramFile,buf);
-  if buf='/' then
-     while buf<>#13 do
-      read(ProgramFile,buf)
-  else
-  begin
-    if buf ='*'  then
-    begin
-      while (buf<>'*') do
-      begin
-        read(ProgramFile,buf);
-      end;
-      read(ProgramFile,buf);
-    end;
-  end
-end;
+
 
 end.

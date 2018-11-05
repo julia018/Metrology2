@@ -14,4 +14,25 @@ object Form1: TForm1
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
+  object lbl1: TLabel
+    Left = 176
+    Top = 120
+    Width = 16
+    Height = 13
+    Caption = 'lbl1'
+  end
+  object lbl2: TLabel
+    Left = 280
+    Top = 120
+    Width = 16
+    Height = 13
+    Caption = 'lbl2'
+  end
+  object lbl3: TLabel
+    Left = 368
+    Top = 120
+    Width = 16
+    Height = 13
+    Caption = 'lbl3'
+  end
 end
